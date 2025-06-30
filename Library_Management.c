@@ -1,8 +1,8 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include<time.h>
-#include<conio.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <conio.h>
 
 struct books {
     int id;
@@ -43,6 +43,7 @@ int main() {
         printf("0. Exit\n\n");
         printf("Enter your choice: ");
         scanf("%d", &ch);
+        getchar(); // consume newline
 
         switch (ch) {
             case 0:
@@ -65,7 +66,8 @@ int main() {
             default:
                 printf("Invalid Choice...\n\n");
         }
-        printf("Press any key to continue...");
+
+        printf("\nPress any key to continue...");
         getch();
     }
 
@@ -80,10 +82,14 @@ void addBook() {
     strcpy(b.date, myDate);
 
     fp = fopen("books.txt", "ab");
+    if (fp == NULL) {
+        printf("File could not be opened.\n");
+        return;
+    }
 
     printf("Enter book id: ");
     scanf("%d", &b.id);
-    fflush(stdin);
+    getchar(); // consume newline
 
     printf("Enter book name: ");
     fgets(b.bookName, sizeof(b.bookName), stdin);
@@ -102,9 +108,14 @@ void addBook() {
 void booksList() {
     system("cls");
     printf("<== Available Books ==>\n\n");
-    printf("%-10s %-30s %-20s %s\n\n", "Book id", "Book Name", "Author", "Date");
+    printf("%-10s %-30s %-20s %s\n\n", "Book ID", "Book Name", "Author", "Date");
 
     fp = fopen("books.txt", "rb");
+    if (fp == NULL) {
+        printf("No books found.\n");
+        return;
+    }
+
     while (fread(&b, sizeof(b), 1, fp) == 1) {
         printf("%-10d %-30s %-20s %s\n", b.id, b.bookName, b.authorName, b.date);
     }
@@ -112,19 +123,24 @@ void booksList() {
 }
 
 void del() {
-    int id, f = 0;
+    int id, found = 0;
     FILE *ft;
     system("cls");
-    printf("<== Remove Books ==>\n\n");
-    printf("Enter Book id to remove: ");
+    printf("<== Remove Book ==>\n\n");
+    printf("Enter Book ID to remove: ");
     scanf("%d", &id);
 
     fp = fopen("books.txt", "rb");
     ft = fopen("temp.txt", "wb");
 
+    if (fp == NULL || ft == NULL) {
+        printf("Error opening file.\n");
+        return;
+    }
+
     while (fread(&b, sizeof(b), 1, fp) == 1) {
-        if (id == b.id) {
-            f = 1;
+        if (b.id == id) {
+            found = 1;
         } else {
             fwrite(&b, sizeof(b), 1, ft);
         }
@@ -136,10 +152,10 @@ void del() {
     remove("books.txt");
     rename("temp.txt", "books.txt");
 
-    if (f == 1) {
-        printf("\n\nDeleted Successfully.\n");
+    if (found) {
+        printf("Book deleted successfully.\n");
     } else {
-        printf("\n\nRecord Not Found!\n");
+        printf("Book not found.\n");
     }
 }
 
@@ -150,29 +166,38 @@ void issueBook() {
     sprintf(myDate, "%02d/%02d/%d", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
     strcpy(s.date, myDate);
 
-    int f = 0;
+    int found = 0;
     system("cls");
-    printf("<== Issue Books ==>\n\n");
-    printf("Enter Book id to issue: ");
+    printf("<== Issue Book ==>\n\n");
+    printf("Enter Book ID to issue: ");
     scanf("%d", &s.id);
+    getchar(); // consume newline
 
     fp = fopen("books.txt", "rb");
+    if (fp == NULL) {
+        printf("Books file not found.\n");
+        return;
+    }
+
     while (fread(&b, sizeof(b), 1, fp) == 1) {
         if (b.id == s.id) {
             strcpy(s.bookName, b.bookName);
-            f = 1;
+            found = 1;
             break;
         }
     }
     fclose(fp);
 
-    if (f == 0) {
-        printf("No book found with this id\n");
+    if (!found) {
+        printf("No book found with this ID.\n");
         return;
     }
 
     fp = fopen("issue.txt", "ab");
-    fflush(stdin);
+    if (fp == NULL) {
+        printf("Issue file could not be opened.\n");
+        return;
+    }
 
     printf("Enter Student Name: ");
     fgets(s.sName, sizeof(s.sName), stdin);
@@ -188,18 +213,22 @@ void issueBook() {
     fwrite(&s, sizeof(s), 1, fp);
     fclose(fp);
 
-    printf("Book Issued Successfully\n\n");
+    printf("Book issued successfully.\n");
 }
 
 void issueList() {
     system("cls");
-    printf("<== Book Issue List ==>\n\n");
-    printf("%-10s %-30s %-20s %-10s %-30s %s\n\n", "S.id", "Name", "Class", "Roll", "Book Name", "Date");
+    printf("<== Issued Books List ==>\n\n");
+    printf("%-10s %-30s %-20s %-10s %-30s %s\n\n", "S.ID", "Name", "Class", "Roll", "Book Name", "Date");
 
     fp = fopen("issue.txt", "rb");
+    if (fp == NULL) {
+        printf("No issued books found.\n");
+        return;
+    }
+
     while (fread(&s, sizeof(s), 1, fp) == 1) {
         printf("%-10d %-30s %-20s %-10d %-30s %s\n", s.id, s.sName, s.sClass, s.sRoll, s.bookName, s.date);
     }
     fclose(fp);
 }
-
